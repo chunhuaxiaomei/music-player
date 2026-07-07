@@ -16,15 +16,41 @@ const MusicAPI = (function() {
         }
     };
 
+    let capacitorHttpInstance = null;
+    let capacitorInitialized = false;
+
+    const initCapacitorHttp = async () => {
+        if (capacitorInitialized) return;
+        
+        try {
+            if (typeof window !== 'undefined' && window.Capacitor) {
+                if (window.Capacitor.Plugins && window.Capacitor.Plugins.Http) {
+                    capacitorHttpInstance = window.Capacitor.Plugins.Http;
+                    console.log('[MusicAPI] Capacitor HTTP found: window.Capacitor.Plugins.Http (@capacitor-community/http)');
+                } else if (window.Capacitor.HTTP) {
+                    capacitorHttpInstance = window.Capacitor.HTTP;
+                    console.log('[MusicAPI] Capacitor HTTP found: window.Capacitor.HTTP');
+                } else {
+                    console.log('[MusicAPI] Capacitor HTTP not found, checking after delay...');
+                    await delay(100);
+                    initCapacitorHttp();
+                    return;
+                }
+            }
+        } catch (e) {
+            console.error('[MusicAPI] Capacitor HTTP init error:', e.message);
+        }
+        capacitorInitialized = true;
+    };
+
+    initCapacitorHttp();
+
     const isCapacitorEnv = () => {
-        return typeof window !== 'undefined' && window.Capacitor && 
-               (window.Capacitor.HTTP || (window.Capacitor.Plugins && window.Capacitor.Plugins.Http));
+        return capacitorHttpInstance !== null;
     };
 
     const getCapacitorHttp = () => {
-        if (window.Capacitor.HTTP) return window.Capacitor.HTTP;
-        if (window.Capacitor.Plugins && window.Capacitor.Plugins.Http) return window.Capacitor.Plugins.Http;
-        return null;
+        return capacitorHttpInstance;
     };
 
     const fetchJson = async (url, options = {}) => {
@@ -36,18 +62,22 @@ const MusicAPI = (function() {
         const capacitorHttp = getCapacitorHttp();
         if (capacitorHttp) {
             try {
+                console.log('[MusicAPI] Using Capacitor HTTP for:', url);
                 const response = await capacitorHttp.request({
                     url: url,
                     method: options.method || 'GET',
                     headers: defaultHeaders,
                     data: options.body ? JSON.parse(options.body) : undefined
                 });
-                return typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+                const result = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+                console.log('[MusicAPI] Capacitor HTTP success:', url, 'status:', response.status);
+                return result;
             } catch (e) {
-                console.warn('Capacitor HTTP请求失败，回退到原生fetch:', e.message);
+                console.error('[MusicAPI] Capacitor HTTP failed:', url, e.message);
             }
         }
 
+        console.log('[MusicAPI] Using native fetch for:', url);
         const response = await fetch(url, {
             ...options,
             headers: defaultHeaders
@@ -64,6 +94,7 @@ const MusicAPI = (function() {
         const capacitorHttp = getCapacitorHttp();
         if (capacitorHttp) {
             try {
+                console.log('[MusicAPI] Using Capacitor HTTP (text) for:', url);
                 const response = await capacitorHttp.request({
                     url: url,
                     method: options.method || 'GET',
@@ -71,12 +102,15 @@ const MusicAPI = (function() {
                     data: options.body ? JSON.parse(options.body) : undefined,
                     responseType: 'text'
                 });
-                return typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+                const result = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+                console.log('[MusicAPI] Capacitor HTTP (text) success:', url);
+                return result;
             } catch (e) {
-                console.warn('Capacitor HTTP请求失败，回退到原生fetch:', e.message);
+                console.error('[MusicAPI] Capacitor HTTP (text) failed:', url, e.message);
             }
         }
 
+        console.log('[MusicAPI] Using native fetch (text) for:', url);
         const response = await fetch(url, {
             ...options,
             headers: defaultHeaders

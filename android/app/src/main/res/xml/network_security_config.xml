@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">search.kuwo.cn</domain>
+        <domain includeSubdomains="true">antiserver.kuwo.cn</domain>
+        <domain includeSubdomains="true">www.kuwo.cn</domain>
+        <domain includeSubdomains="true">c.y.qq.com</domain>
+        <domain includeSubdomains="true">u.y.qq.com</domain>
+        <domain includeSubdomains="true">dl.stream.qqmusic.qq.com</domain>
+        <domain includeSubdomains="true">music.163.com</domain>
+        <domain includeSubdomains="true">songsearch.kugou.com</domain>
+        <domain includeSubdomains="true">m.kugou.com</domain>
+        <domain includeSubdomains="true">api.kugou.com</domain>
+        <domain includeSubdomains="true">api.lyrics.ovh</domain>
+    </domain-config>
+</network-security-config>

@@ -129,8 +129,13 @@ const MusicPlayer = (function() {
         }
     };
     
-    const isCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-    const useDirectApi = isCapacitor || localStorage.getItem('use_direct_api') === 'true';
+    const isCapacitor = () => {
+        return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    };
+    
+    const useDirectApi = () => {
+        return isCapacitor() || localStorage.getItem('use_direct_api') === 'true';
+    };
 
     const getApiBase = () => {
         const saved = localStorage.getItem('music_api_base');
@@ -163,7 +168,7 @@ const MusicPlayer = (function() {
         searchResults.classList.add('show');
         emptyState.style.display = 'none';
 
-        if (useDirectApi && window.MusicAPI) {
+        if (useDirectApi() && window.MusicAPI) {
             try {
                 const result = await window.MusicAPI.search(keyword);
                 if (result && result.code === 200 && result.data && result.data.length > 0) {
@@ -529,7 +534,7 @@ const MusicPlayer = (function() {
     };
     
     const getPlayUrl = async (song) => {
-        if (useDirectApi && window.MusicAPI) {
+        if (useDirectApi() && window.MusicAPI) {
             try {
                 const result = await window.MusicAPI.getPlayUrl(song.id, song.name, song.artist, song.source);
                 if (result && result.code === 200 && result.url) {
@@ -609,7 +614,7 @@ const MusicPlayer = (function() {
             source = songList[currentIndex].source || '';
         }
 
-        if (useDirectApi && window.MusicAPI) {
+        if (useDirectApi() && window.MusicAPI) {
             try {
                 const result = await window.MusicAPI.getLyrics(songName, artistName, songId, source);
                 if (result && result.code === 200 && result.lyrics) {

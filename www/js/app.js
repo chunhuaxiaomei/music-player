@@ -184,8 +184,9 @@ const MusicPlayer = (function() {
                             }
                         }
                         allSongs = uniqueSongs;
+                        songList = allSongs;
                         resultCount.textContent = `${allSongs.length} 首歌曲`;
-                        renderResults(allSongs);
+                        renderResults();
                     }
                 });
                 if (result && result.code === 200 && result.data && result.data.length > 0) {
@@ -199,8 +200,9 @@ const MusicPlayer = (function() {
                         }
                     }
                     allSongs = uniqueSongs;
+                    songList = allSongs;
                     resultCount.textContent = `${allSongs.length} 首歌曲`;
-                    renderResults(allSongs);
+                    renderResults();
                     showToast(`找到 ${allSongs.length} 首歌曲`);
                     return;
                 }

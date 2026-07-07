@@ -543,22 +543,52 @@ const MusicAPI = (function() {
             }
         };
 
-        const [neteaseSongs, qqSongs, kugouSongs] = await Promise.all([
-            searchNeteaseMusic(keyword),
-            searchQQMusic(keyword, 1, 30),
-            searchKugouMusic(keyword, 1, 30)
+        const qqPromise = searchQQMusic(keyword, 1, 50);
+        const neteasePromise = searchNeteaseMusic(keyword);
+        const kugouPromise = searchKugouMusic(keyword, 1, 50);
+
+        const firstResult = await Promise.race([
+            qqPromise.then(songs => ({ source: 'qq', songs })),
+            neteasePromise.then(songs => ({ source: 'netease', songs })),
+            kugouPromise.then(songs => ({ source: 'kugou', songs })),
+            new Promise(resolve => setTimeout(() => resolve({ source: 'timeout', songs: [] }), 3000))
         ]);
 
-        addSongs(qqSongs);
-        addSongs(neteaseSongs);
-        addSongs(kugouSongs);
+        if (firstResult.source === 'qq') addSongs(firstResult.songs);
+        else if (firstResult.source === 'netease') addSongs(firstResult.songs);
+        else if (firstResult.source === 'kugou') addSongs(firstResult.songs);
+
+        const remainingPromises = [];
+        if (firstResult.source !== 'qq') remainingPromises.push(qqPromise);
+        if (firstResult.source !== 'netease') remainingPromises.push(neteasePromise);
+        if (firstResult.source !== 'kugou') remainingPromises.push(kugouPromise);
+
+        if (remainingPromises.length > 0) {
+            Promise.all(remainingPromises).then(results => {
+                for (const songs of results) {
+                    if (songs && songs.length > 0) {
+                        addSongs(songs);
+                    }
+                }
+                allSongs.sort((a, b) => calculateSongScore(b, keyword) - calculateSongScore(a, keyword));
+                searchCache.data = [...allSongs];
+                if (searchCache.keyword === keyword && searchCache.onUpdate) {
+                    searchCache.onUpdate({
+                        code: 200,
+                        message: '搜索更新',
+                        data: [...allSongs],
+                        total: allSongs.length
+                    });
+                }
+            }).catch(() => {});
+        }
 
         allSongs.sort((a, b) => calculateSongScore(b, keyword) - calculateSongScore(a, keyword));
 
         searchCache.data = [...allSongs];
         searchCache.keyword = keyword;
 
-        searchAllKuwoMusic(keyword, 5).then(kuwoSongs => {
+        searchAllKuwoMusic(keyword, 3).then(kuwoSongs => {
             if (searchCache.keyword === keyword) {
                 updateSearchResults(keyword, kuwoSongs);
             }

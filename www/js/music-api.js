@@ -454,10 +454,9 @@ const MusicAPI = (function() {
         }
     };
 
-    const searchAllKuwoMusic = async (keyword) => {
+    const searchAllKuwoMusic = async (keyword, maxPages = 5) => {
         const allSongs = [];
         const seenIds = new Set();
-        const maxPages = 20;
         const pageSize = 30;
 
         for (let page = 1; page <= maxPages; page++) {
@@ -472,7 +471,6 @@ const MusicAPI = (function() {
             }
 
             if (songs.length < pageSize) break;
-            await delay(200);
         }
 
         allSongs.sort((a, b) => calculateSongScore(b, keyword) - calculateSongScore(a, keyword));
@@ -502,14 +500,35 @@ const MusicAPI = (function() {
         return null;
     };
 
-    // ========== 搜索整合 ==========
-    const search = async (keyword) => {
-        const [kuwoSongs, neteaseSongs, qqSongs, kugouSongs] = await Promise.all([
-            searchAllKuwoMusic(keyword),
-            searchNeteaseMusic(keyword),
-            searchQQMusic(keyword, 1, 30),
-            searchKugouMusic(keyword, 1, 30)
-        ]);
+    let searchCache = { keyword: '', data: [], onUpdate: null };
+
+    const updateSearchResults = (keyword, newSongs) => {
+        if (searchCache.keyword !== keyword) return;
+        
+        const seenKeys = new Set(searchCache.data.map(s => `${s.name}|${s.artist}`));
+        
+        for (const song of newSongs) {
+            const key = `${song.name}|${song.artist}`;
+            if (!seenKeys.has(key)) {
+                seenKeys.add(key);
+                searchCache.data.push(song);
+            }
+        }
+        
+        searchCache.data.sort((a, b) => calculateSongScore(b, keyword) - calculateSongScore(a, keyword));
+        
+        if (searchCache.onUpdate) {
+            searchCache.onUpdate({
+                code: 200,
+                message: '搜索更新',
+                data: [...searchCache.data],
+                total: searchCache.data.length
+            });
+        }
+    };
+
+    const search = async (keyword, onUpdate) => {
+        searchCache = { keyword: keyword, data: [], onUpdate: onUpdate || null };
 
         const allSongs = [];
         const seenKeys = new Set();
@@ -524,12 +543,26 @@ const MusicAPI = (function() {
             }
         };
 
+        const [neteaseSongs, qqSongs, kugouSongs] = await Promise.all([
+            searchNeteaseMusic(keyword),
+            searchQQMusic(keyword, 1, 30),
+            searchKugouMusic(keyword, 1, 30)
+        ]);
+
         addSongs(qqSongs);
         addSongs(neteaseSongs);
         addSongs(kugouSongs);
-        addSongs(kuwoSongs);
 
         allSongs.sort((a, b) => calculateSongScore(b, keyword) - calculateSongScore(a, keyword));
+
+        searchCache.data = [...allSongs];
+        searchCache.keyword = keyword;
+
+        searchAllKuwoMusic(keyword, 5).then(kuwoSongs => {
+            if (searchCache.keyword === keyword) {
+                updateSearchResults(keyword, kuwoSongs);
+            }
+        }).catch(() => {});
 
         return {
             code: 200,

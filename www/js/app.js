@@ -172,7 +172,22 @@ const MusicPlayer = (function() {
 
         if (useDirectApi() && window.MusicAPI) {
             try {
-                const result = await window.MusicAPI.search(keyword);
+                const result = await window.MusicAPI.search(keyword, (update) => {
+                    if (update && update.data && update.data.length > 0) {
+                        const uniqueSongs = [];
+                        const seenIds = new Set();
+                        for (const song of update.data) {
+                            const key = `${song.name}|${song.artist}`;
+                            if (!seenIds.has(key)) {
+                                seenIds.add(key);
+                                uniqueSongs.push(song);
+                            }
+                        }
+                        allSongs = uniqueSongs;
+                        resultCount.textContent = `${allSongs.length} 首歌曲`;
+                        renderSearchResults(allSongs);
+                    }
+                });
                 if (result && result.code === 200 && result.data && result.data.length > 0) {
                     const uniqueSongs = [];
                     const seenIds = new Set();

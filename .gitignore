@@ -1,0 +1,9 @@
+node_modules/
+gequbao-proxy/node_modules/
+android/build/
+android/app/build/
+*.log
+.DS_Store
+.idea/
+.vscode/
+*.apk

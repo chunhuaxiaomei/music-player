@@ -1,0 +1,14 @@
+{
+  "name": "gequbao-proxy",
+  "version": "1.0.0",
+  "description": "歌曲宝音乐API代理",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.18.1",
+    "cheerio": "^1.2.0",
+    "express": "^4.22.2"
+  }
+}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歌词展示 - 纯净音乐播放器</title>
+    <link rel="stylesheet" href="css/lyrics-style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="lyrics-page">
+        <header class="lyrics-header">
+            <button id="back-btn" class="back-btn">
+                <span class="material-icons">arrow_back</span>
+            </button>
+            <div class="current-info">
+                <span id="current-song" class="song-title"></span>
+                <span id="current-artist" class="artist-name"></span>
+            </div>
+            <button id="theme-toggle" class="theme-toggle">
+                <span class="material-icons">dark_mode</span>
+            </button>
+        </header>
+
+        <main class="lyrics-main">
+            <div id="lyrics-container" class="lyrics-container">
+                <div id="lyrics-scroll" class="lyrics-scroll">
+                    <div id="lyrics-list" class="lyrics-list"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="lyrics-footer">
+            <div class="progress-wrapper">
+                <span id="current-time" class="time-label">0:00</span>
+                <div id="progress-bar" class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                    <div id="progress-thumb" class="progress-thumb"></div>
+                </div>
+                <span id="total-time" class="time-label">0:00</span>
+            </div>
+
+            <div class="player-controls">
+                <button id="prev-btn" class="control-btn">
+                    <span class="material-icons">skip_previous</span>
+                </button>
+                <button id="play-pause-btn" class="control-btn play-btn">
+                    <span class="material-icons">play_arrow</span>
+                </button>
+                <button id="next-btn" class="control-btn">
+                    <span class="material-icons">skip_next</span>
+                </button>
+            </div>
+
+            <div class="volume-wrapper">
+                <button id="volume-toggle" class="volume-btn">
+                    <span class="material-icons">volume_up</span>
+                </button>
+                <div id="volume-bar" class="volume-bar">
+                    <div id="volume-fill" class="volume-fill"></div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <audio id="audio-player" preload="metadata"></audio>
+
+    <script src="js/lyrics-app.js"></script>
+</body>
+</html>

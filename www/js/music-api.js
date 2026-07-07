@@ -1,6 +1,6 @@
 /**
  * 音乐API直连模块 - 用于Capacitor APP直接调用第三方音乐平台API
- * 利用CapacitorHttp插件绕过浏览器CORS限制
+ * 利用Capacitor HTTP绕过浏览器CORS限制
  */
 
 const MusicAPI = (function() {
@@ -16,24 +16,61 @@ const MusicAPI = (function() {
         }
     };
 
+    const isCapacitorEnv = () => {
+        return typeof window !== 'undefined' && window.Capacitor && window.Capacitor.HTTP;
+    };
+
     const fetchJson = async (url, options = {}) => {
+        const defaultHeaders = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            ...(options.headers || {})
+        };
+
+        if (isCapacitorEnv()) {
+            try {
+                const response = await window.Capacitor.HTTP.request({
+                    url: url,
+                    method: options.method || 'GET',
+                    headers: defaultHeaders,
+                    data: options.body ? JSON.parse(options.body) : undefined
+                });
+                return typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+            } catch (e) {
+                console.warn('Capacitor HTTP请求失败，回退到原生fetch:', e.message);
+            }
+        }
+
         const response = await fetch(url, {
             ...options,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                ...(options.headers || {})
-            }
+            headers: defaultHeaders
         });
         return response.json();
     };
 
     const fetchText = async (url, options = {}) => {
+        const defaultHeaders = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            ...(options.headers || {})
+        };
+
+        if (isCapacitorEnv()) {
+            try {
+                const response = await window.Capacitor.HTTP.request({
+                    url: url,
+                    method: options.method || 'GET',
+                    headers: defaultHeaders,
+                    data: options.body ? JSON.parse(options.body) : undefined,
+                    responseType: 'text'
+                });
+                return typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+            } catch (e) {
+                console.warn('Capacitor HTTP请求失败，回退到原生fetch:', e.message);
+            }
+        }
+
         const response = await fetch(url, {
             ...options,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                ...(options.headers || {})
-            }
+            headers: defaultHeaders
         });
         return response.text();
     };

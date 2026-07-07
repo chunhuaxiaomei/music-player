@@ -17,7 +17,14 @@ const MusicAPI = (function() {
     };
 
     const isCapacitorEnv = () => {
-        return typeof window !== 'undefined' && window.Capacitor && window.Capacitor.HTTP;
+        return typeof window !== 'undefined' && window.Capacitor && 
+               (window.Capacitor.HTTP || (window.Capacitor.Plugins && window.Capacitor.Plugins.Http));
+    };
+
+    const getCapacitorHttp = () => {
+        if (window.Capacitor.HTTP) return window.Capacitor.HTTP;
+        if (window.Capacitor.Plugins && window.Capacitor.Plugins.Http) return window.Capacitor.Plugins.Http;
+        return null;
     };
 
     const fetchJson = async (url, options = {}) => {
@@ -26,9 +33,10 @@ const MusicAPI = (function() {
             ...(options.headers || {})
         };
 
-        if (isCapacitorEnv()) {
+        const capacitorHttp = getCapacitorHttp();
+        if (capacitorHttp) {
             try {
-                const response = await window.Capacitor.HTTP.request({
+                const response = await capacitorHttp.request({
                     url: url,
                     method: options.method || 'GET',
                     headers: defaultHeaders,
@@ -53,9 +61,10 @@ const MusicAPI = (function() {
             ...(options.headers || {})
         };
 
-        if (isCapacitorEnv()) {
+        const capacitorHttp = getCapacitorHttp();
+        if (capacitorHttp) {
             try {
-                const response = await window.Capacitor.HTTP.request({
+                const response = await capacitorHttp.request({
                     url: url,
                     method: options.method || 'GET',
                     headers: defaultHeaders,

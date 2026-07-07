@@ -188,7 +188,11 @@ const MusicPlayer = (function() {
                     return;
                 }
             } catch (e) {
-                console.warn('直连API搜索失败，回退到代理:', e.message);
+                console.warn('直连API搜索失败:', e.message);
+                resultsList.innerHTML = `<div class="empty-state" style="height: auto; padding: 40px;"><p>搜索失败: ${e.message}</p><p style="font-size: 12px; color: #999; margin-top: 10px;">请检查网络连接或稍后重试</p></div>`;
+                resultCount.textContent = '0 首';
+                showToast(`搜索失败: ${e.message}`);
+                return;
             }
         }
 

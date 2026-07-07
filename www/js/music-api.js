@@ -24,15 +24,19 @@ const MusicAPI = (function() {
         
         try {
             if (typeof window !== 'undefined' && window.Capacitor) {
-                if (window.Capacitor.Plugins && window.Capacitor.Plugins.Http) {
+                // Try custom CORS plugin first
+                if (window.Capacitor.Plugins && window.Capacitor.Plugins.CorsPlugin) {
+                    capacitorHttpInstance = window.Capacitor.Plugins.CorsPlugin;
+                    console.log('[MusicAPI] Custom CORS plugin found: window.Capacitor.Plugins.CorsPlugin');
+                } else if (window.Capacitor.Plugins && window.Capacitor.Plugins.Http) {
                     capacitorHttpInstance = window.Capacitor.Plugins.Http;
-                    console.log('[MusicAPI] Capacitor HTTP found: window.Capacitor.Plugins.Http (@capacitor-community/http)');
+                    console.log('[MusicAPI] Capacitor HTTP found: window.Capacitor.Plugins.Http');
                 } else if (window.Capacitor.HTTP) {
                     capacitorHttpInstance = window.Capacitor.HTTP;
                     console.log('[MusicAPI] Capacitor HTTP found: window.Capacitor.HTTP');
                 } else {
                     console.log('[MusicAPI] Capacitor HTTP not found, checking after delay...');
-                    await delay(100);
+                    await delay(200);
                     initCapacitorHttp();
                     return;
                 }
@@ -110,6 +114,8 @@ const MusicAPI = (function() {
                 return result;
             } catch (e) {
                 console.error('[MusicAPI] Capacitor HTTP failed:', url, e.message);
+                // Don't fall through, throw so caller knows the real error
+                throw new Error(`Capacitor HTTP failed: ${e.message}`);
             }
         }
 

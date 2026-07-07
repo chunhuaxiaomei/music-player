@@ -168,6 +168,8 @@ const MusicPlayer = (function() {
         searchResults.classList.add('show');
         emptyState.style.display = 'none';
 
+        let allSongs = [];
+
         if (useDirectApi() && window.MusicAPI) {
             try {
                 const result = await window.MusicAPI.search(keyword);
@@ -232,8 +234,6 @@ const MusicPlayer = (function() {
                 }
             }
         ];
-        
-        let allSongs = [];
         
         for (let i = 0; i < apis.length; i++) {
             try {

@@ -53,6 +53,42 @@ const MusicAPI = (function() {
         return capacitorHttpInstance;
     };
 
+    const CORS_PROXIES = [
+        'https://cors-anywhere.herokuapp.com/',
+        'https://api.allorigins.win/raw?url=',
+        'https://corsproxy.io/?url='
+    ];
+
+    const fetchWithProxy = async (url, options = {}, proxyIndex = 0) => {
+        if (proxyIndex >= CORS_PROXIES.length) {
+            throw new Error('All proxies failed');
+        }
+
+        const proxy = CORS_PROXIES[proxyIndex];
+        const proxyUrl = proxy.includes('url=') ? proxy + encodeURIComponent(url) : proxy + url;
+
+        try {
+            console.log('[MusicAPI] Using proxy', proxyIndex, 'for:', url);
+            const response = await fetch(proxyUrl, {
+                ...options,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    ...(options.headers || {})
+                },
+                timeout: 15000
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error ${response.status}`);
+            }
+
+            return response;
+        } catch (e) {
+            console.warn('[MusicAPI] Proxy', proxyIndex, 'failed:', e.message);
+            return fetchWithProxy(url, options, proxyIndex + 1);
+        }
+    };
+
     const fetchJson = async (url, options = {}) => {
         const defaultHeaders = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -77,12 +113,24 @@ const MusicAPI = (function() {
             }
         }
 
-        console.log('[MusicAPI] Using native fetch for:', url);
-        const response = await fetch(url, {
-            ...options,
-            headers: defaultHeaders
-        });
-        return response.json();
+        try {
+            console.log('[MusicAPI] Trying native fetch for:', url);
+            const response = await fetch(url, {
+                ...options,
+                headers: defaultHeaders,
+                timeout: 10000
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error ${response.status}`);
+            }
+            
+            return response.json();
+        } catch (e) {
+            console.warn('[MusicAPI] Native fetch failed, trying CORS proxy:', e.message);
+            const response = await fetchWithProxy(url, options);
+            return response.json();
+        }
     };
 
     const fetchText = async (url, options = {}) => {
@@ -110,12 +158,24 @@ const MusicAPI = (function() {
             }
         }
 
-        console.log('[MusicAPI] Using native fetch (text) for:', url);
-        const response = await fetch(url, {
-            ...options,
-            headers: defaultHeaders
-        });
-        return response.text();
+        try {
+            console.log('[MusicAPI] Trying native fetch (text) for:', url);
+            const response = await fetch(url, {
+                ...options,
+                headers: defaultHeaders,
+                timeout: 10000
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error ${response.status}`);
+            }
+
+            return response.text();
+        } catch (e) {
+            console.warn('[MusicAPI] Native fetch (text) failed, trying CORS proxy:', e.message);
+            const response = await fetchWithProxy(url, options);
+            return response.text();
+        }
     };
 
     // ========== 歌曲评分 ==========
